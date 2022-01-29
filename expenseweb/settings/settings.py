@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 from pathlib import Path
-import django_heroku
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,9 +18,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q++(!8%hw60cox98fvprx1w#r4xu2b1pq*nnw$8!)z^*@(^qi&'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -73,20 +69,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'expenseweb.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'expense_db',
-        'HOST': '34.64.134.218',
-        'USER': 'postgres',
-        'PASSWORD': '1Ck5Dh711^^',
-        'PORT': 5432
-        
-    }
-}
 
 
 # Password validation
@@ -133,6 +116,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Activate Django-Heroku.
-django_heroku.settings(locals())
