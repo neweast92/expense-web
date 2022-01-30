@@ -16,6 +16,9 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from authentication.utils import token_generator
 
+from django.urls import reverse
+from django.contrib import auth
+
 
 # Create your views here.
 class RegistrationView(View):
@@ -106,9 +109,30 @@ class LoginView(View):
         username = request.POST['username']
         password = request.POST['password']
 
+        if username and password:
+            user = auth.authenticate(username=username, password=password)
+
+            if user:
+                if user.is_active:
+                    auth.login(request, user)
+                    messages.success(request, '환영합니다, ' + user.username + '님')
+                    return redirect('expenses')    
+                
+                messages.error(request, '비활성화된 계정입니다. 메일을 확인하세요.')
+                return render(request, 'authentication/login.html')
+            
+            messages.error(request, '이름과 암호를 정확히 입력해주세요.')
+            return render(request, 'authentication/login.html')
+        
+        messages.error(request, '이름과 암호를 입력해주세요.')
         return render(request, 'authentication/login.html')
+        
 
-
+class LogoutView(View):
+    def post(self, request):
+        auth.logout(request)
+        messages.success(request, '로그아웃되었습니다.')
+        return redirect('login')
 
 
 class EmailValidationView(View):    

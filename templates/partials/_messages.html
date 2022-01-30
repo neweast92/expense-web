@@ -1,5 +1,5 @@
 {% if messages %}
-<ul class="messages">
+<ul class="messages mt-3">
     {% for message in messages %}
     <li{% if message.tags %} class="alert alert-sm alert-{{ message.tags }}"{% endif %}>
         {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}Important: {% endif %}

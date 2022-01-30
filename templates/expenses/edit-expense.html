@@ -6,7 +6,7 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{% url 'expenses' %}">Expenses</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Add Expenses</li>
+            <li class="breadcrumb-item active" aria-current="page">Edit Expenses</li>
         </ol>
     </nav>
 
@@ -27,16 +27,16 @@
                     <label for="">Category</label>
                     <select class="form-control" name="category" id="">
                         {% for category in categories %}
-                            <option value="{{ category.name }}">{{ category.name }}</option>
+                            <option value="{{ category.name }}" {% if category.name == values.category %}selected{% endif %}>{{ category.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="">Date of Expense</label>
-                    <input type="date" class="form-control form-control-sm" name="expense_date" value="{{ date }}">
+                    <input type="date" class="form-control form-control-sm" name="expense_date" value="{{ values.date }}">
                 </div>
                 <div>
-                    <input type="submit" value="Submit" class="btn btn-primary btn-primary-sm">
+                    <input type="submit" value="Save" class="btn btn-primary btn-primary-sm">
                 </div>
             </form>
         </div>
