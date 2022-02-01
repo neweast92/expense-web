@@ -7,19 +7,19 @@
         <div class="col-md-10">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{% url 'expenses' %}">Expenses</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Edit Expenses</li>
+                    <li class="breadcrumb-item"><a href="{% url 'income' %}">Income</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit Income</li>
                 </ol>
             </nav>
         </div>
         <div class="col-md-2">
-            <a href="{% url 'delete-expense' expense.id %}" class="btn btn-danger">Delete</a>
+            <a href="{% url 'delete-income' income.id %}" class="btn btn-danger">Delete</a>
         </div>
     </div>
     
     <div class="card mt-3">
         <div class="card-body">
-            <form action="{% url 'edit-expense' expense.id %}" method='POST' class="d-grid gap-3">
+            <form action="{% url 'edit-income' income.id %}" method='POST' class="d-grid gap-3">
                 {% include 'partials/_messages.html' %}
                 {% csrf_token %}
                 <div class="form-group ">
@@ -31,16 +31,16 @@
                     <input type="text" class="form-control form-control-sm" name="description" value="{{ values.description }}">
                 </div>
                 <div class="form-group">
-                    <label for="">Category</label>
-                    <select class="form-control" name="category" id="">
-                        {% for category in categories %}
-                            <option value="{{ category.name }}" {% if category.name == values.category %}selected{% endif %}>{{ category.name }}</option>
+                    <label for="">Source</label>
+                    <select class="form-control" name="source" id="">
+                        {% for source in sources %}
+                            <option value="{{ source.name }}" {% if source.name == values.source %}selected{% endif %}>{{ source.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="">Date of Expense</label>
-                    <input type="date" class="form-control form-control-sm" name="expense_date" value="{{ values.date | date:'Y-m-d' }}">
+                    <label for="">Date of Income</label>
+                    <input type="date" class="form-control form-control-sm" name="income_date" value="{{ values.date | date:'Y-m-d' }}">
                 </div>
                 <div>
                     <input type="submit" value="Save" class="btn btn-primary btn-primary-sm">

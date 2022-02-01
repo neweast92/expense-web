@@ -20,12 +20,18 @@
   <button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">
+  <div class="form-control bg-dark p-0">
+  </div>
   <div class="navbar-nav">
     <div class="nav-item text-nowrap">
+      <span class='nav-link'>{{ request.user.username }}</span>
+    </div>
+  </div>
+  <div class="navbar-nav">
+    <div class="nav-item text-nowrap" style='max-height: 3.6rem; margin-left:1rem;'>
       <form action="{% url 'logout' %}" method="POST">
         {% csrf_token %}
-        <input class="text text-capitalize" type="submit" value="Sign out">
+        <input class="nav-link px-4 mt-2 bg-dark text-white" type="submit" value="Sign out">
       </form>
     </div>
   </div>

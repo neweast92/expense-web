@@ -14,7 +14,9 @@ import json
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
+
 from authentication.utils import token_generator
+from userpreferences.models import UserPreference
 
 from django.urls import reverse
 from django.contrib import auth
@@ -43,7 +45,6 @@ class RegistrationView(View):
                 if len(password) < 8:
                     messages.error(request, '비밀번호는 8자 이상이여야 합니다.')
                     return render(request, 'authentication/register.html', context=context)
-            
                 user = User.objects.create_user(username=username, email=email)
                 user.set_password(password)
                 user.is_active = False
@@ -85,7 +86,7 @@ class VerificationView(View):
             id = force_text(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=id)
 
-            if token_generator.check_token(user, token):
+            if not token_generator.check_token(user, token):
                 messages.info(request,  '이미 활성화되었습니다.')
                 return redirect('login')
 
@@ -116,7 +117,7 @@ class LoginView(View):
                 if user.is_active:
                     auth.login(request, user)
                     messages.success(request, '환영합니다, ' + user.username + '님')
-                    return redirect('expenses')    
+                    return redirect('expenses')
                 
                 messages.error(request, '비활성화된 계정입니다. 메일을 확인하세요.')
                 return render(request, 'authentication/login.html')
