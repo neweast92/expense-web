@@ -8,8 +8,8 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.core.mail import EmailMessage
+from expenses.models import Expense
 from validate_email import validate_email
-import json
 
 from django.utils.encoding import force_bytes, force_text, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -20,6 +20,19 @@ from userpreferences.models import UserPreference
 
 from django.urls import reverse
 from django.contrib import auth
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+
+import json
+import threading
+
+
+class EmailThread(threading.Thread):
+    def __init__(self, email_msg):
+        self.email_msg = email_msg
+        threading.Thread.__init__(self)
+
+    def run(self):
+        self.email_msg.send(fail_silently=False)
 
 
 # Create your views here.
@@ -69,7 +82,8 @@ class RegistrationView(View):
                         'noreply@semycolon.com',
                         [email],
                     )
-                    email_msg.send(fail_silently=False)
+                    # email_msg.send(fail_silently=False)
+                    EmailThread(email_msg).start()
                 except:
                     messages.error(request, '메일 발송에 실패하였습니다.')
                     
@@ -158,3 +172,97 @@ class UsernameValidationView(View):
         if User.objects.filter(username=username).exists():
             return JsonResponse({'username_error':'동일한 이름이 존재합니다'}, status=409)
         return JsonResponse({'username_valid':True})
+
+
+class RequestPasswordResetEmail(View):
+    def get(self, request):
+        return render(request, 'authentication/request-password.html')
+
+    def post(self, request):
+        email = request.POST['email']
+        context = {
+            'values': request.POST
+        }
+
+        if not validate_email(email):
+            messages.error(request, '이메일을 정확히 입력해주세요')
+            return render(request, 'authentication/request-password.html', context)
+        
+        current_site = get_current_site(request)
+
+        user = User.objects.filter(email=email)
+        if user.exists():
+            email_contents = {
+                'user': user[0],
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user[0].pk)),
+                'token': PasswordResetTokenGenerator().make_token(user[0])
+            }
+            link = reverse('reset-password', kwargs={'uidb64': email_contents['uid'], 'token': email_contents['token']})
+            
+            reset_url = 'http://' + current_site.domain + link
+            try:
+                email_subject = 'Password reset Instruction'
+                email_body = 'Hi ' + user[0].username + '\nPlease use the link below to reset your password\n\n' + reset_url
+                email_msg = EmailMessage(
+                    email_subject,
+                    email_body,
+                    'noreply@semycolon.com',
+                    [email],
+                )
+                # email_msg.send(fail_silently=False)
+                EmailThread(email_msg).start()
+            except:
+                messages.error(request, '메일 발송에 실패하였습니다.')
+            else:
+                messages.success(request, '발송된 이메일을 확인해주세요.')
+            return redirect('request-password')
+            
+        messages.success(request, '이메일을 정확히 입력해주세요.')
+        return render(request, 'authentication/request-password.html', context)
+
+
+class CompletePasswordReset(View):
+    def get(self, request, uidb64, token):
+        context = {
+            'uidb64': uidb64,
+            'token': token
+        }
+
+        user_id = force_text(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=user_id)
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            messages.info(request, '링크가 유효하지 않습니다.')
+            return render(request, 'authentication/request-password.html')
+
+        return render(request, 'authentication/reset-password.html', context)
+
+    def post(self, request, uidb64, token):
+        context = {
+            'uidb64': uidb64,
+            'token': token
+        }
+
+        password = request.POST['password']
+        password2 = request.POST['password2']
+
+        if len(password) < 8:
+            messages.error(request, '비밀번호는 8자 이상이여야 합니다.')
+            return render(request, 'authentication/reset-password.html', context)
+        elif password != password2:
+            messages.error(request, '패스워드가 일치하지 않습니다')
+            return render(request, 'authentication/reset-password.html', context)
+        
+        try:
+            user_id = force_text(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=user_id)
+            user.set_password(password)
+            user.save()
+        except Exception as identifier:
+            messages.info(request, '수정 중 에러 발생')
+            return render(request, 'authentication/reset-password.html', context)
+        
+        messages.success(request, '패스워드가 수정되었습니다')
+        return redirect('login')
+        

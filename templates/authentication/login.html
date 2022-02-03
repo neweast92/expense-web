@@ -13,17 +13,20 @@
                 <form action="{% url 'login' %}" method="post">
                     {% csrf_token %}
                     {% include 'partials/_messages.html' %}
-                    <div class="form-group d-grid gap-3">
+                    <div class="form-group d-grid gap-1">
                         <input type="text" name="username" id="usernameField" class="form-control form-control-sm" placeholder="username" value="{{ fieldValues.username }}">
                         <input type="password" name="password" id="passwordField" class="form-control form-control-sm" placeholder="password">
-                        <small class="d-flex justify-content-end py-2 showPasswordToggle">SHOW</small>
+                        <small class="d-flex justify-content-end mb-2 showPasswordToggle">SHOW</small>
                     </div>
                     <div class="d-flex justify-content-center">
-                        <input type="submit" value="Login" class="btn btn-block btn-primary submit-btn mx-1">
-                        <a href="{% url 'register' %}" class="btn btn-primary mx-1">Register</a>
+                        <input type="submit" value="Login" class="btn btn-block btn-primary submit-btn w-100">
                     </div>
                 </form>
-            </div> 
+                <div class="container">
+                    <span>계정이 없습니까? </span><a href="{% url 'register' %}">Register</a><br>
+                    <span>암호을 잊으셨습니까? </span><a href="{% url 'request-password' %}">Reset PW</a>
+                </div>
+            </div>
         </div>
     </div>
     <div class="col-md-4"></div>

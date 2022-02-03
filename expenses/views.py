@@ -7,6 +7,7 @@ from django.http import JsonResponse
 from userpreferences.models import UserPreference
 from expenses.models import Category, Expense
 from expenses.utils import now
+import datetime
 import json
 
 
@@ -124,3 +125,18 @@ def delete_expense(request, id):
     expense.delete()
     messages.success(request, '지출내역이 삭제되었습니다.')
     return redirect('expenses')
+    
+
+def expense_category_summary(request):
+    today = datetime.date.today()
+    six_months_ago = today - datetime.timedelta(days=30*6)
+
+    expenses = Expense.objects.filter(date__gte = six_months_ago, date__lte = today)
+    category_list = list(set(map(lambda x:x.category, expenses)))
+
+    for x in expenses:
+        for y in category_list:
+            # finalrep[y] = lambda x:
+            pass
+
+    finalrep = {}

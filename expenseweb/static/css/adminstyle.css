@@ -1,0 +1,8 @@
+:root {
+    --header-bg:black !important;
+    --header-color:white !important;
+}
+
+.submit-row input{
+    width: 100%;
+}
