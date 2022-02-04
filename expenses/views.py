@@ -3,12 +3,19 @@ from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from userpreferences.models import UserPreference
 from expenses.models import Category, Expense
 from expenses.utils import now
 import datetime
 import json
+import csv
+import xlwt
+
+from django.db.models import Sum
+from django.template.loader import render_to_string
+# from weasyprint import HTML
+import tempfile
 
 
 # Create your views here.
@@ -131,12 +138,79 @@ def expense_category_summary(request):
     today = datetime.date.today()
     six_months_ago = today - datetime.timedelta(days=30*6)
 
-    expenses = Expense.objects.filter(date__gte = six_months_ago, date__lte = today)
+    expenses = Expense.objects.filter(owner = request.user, date__gte = six_months_ago, date__lte = today)
     category_list = list(set(map(lambda x:x.category, expenses)))
 
-    for x in expenses:
-        for y in category_list:
-            # finalrep[y] = lambda x:
-            pass
-
     finalrep = {}
+    for y in category_list:
+        finalrep[y] = sum(item.amount for item in expenses.filter(category=y))
+
+    return JsonResponse({'expense_category_data':finalrep}, safe=False)
+
+
+def stats_view(request):
+    return render(request, 'expenses/stats.html')
+
+
+def export_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now()) + '.csv'
+
+    writer = csv.writer(response)
+    writer.writerow(['Amount', 'Description', 'Category', 'Date'])
+
+    expenses = Expense.objects.filter(owner = request.user)
+    for expense in expenses:
+        writer.writerow([expense.amount, expense.description, expense.category, expense.date])
+    
+    return response
+
+
+def export_excel(request):
+    response = HttpResponse(content_type='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now()) + '.xls'
+
+    wb = xlwt.Workbook(encoding='utf-8')
+    ws = wb.add_sheet('Expenses')
+    row_num = 0
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+
+    columns = ['Amount', 'Description', 'Category', 'Date']
+    for col_num in range(len(columns)):
+        ws.write(row_num, col_num, columns[col_num], font_style)
+
+    font_style = xlwt.XFStyle()
+    
+    expenses = Expense.objects.filter(owner=request.user).values_list('amount', 'description', 'category', 'date')
+    
+    for expense in expenses:
+        row_num += 1
+        for col_num in range(len(expense)):
+            ws.write(row_num, col_num, str(expense[col_num]), font_style)
+
+    wb.save(response)
+
+    return response
+
+# Only on Linux
+# def export_pdf(request):
+#     response = HttpResponse(content_type='application/pdf')
+#     response['Content-Disposition'] = 'attachment; filename=Expenses' + str(datetime.datetime.now()) + '.pdf'
+#     response['Content-Transfer-Encoding'] = 'binary'
+
+#     expenses = Expense.objects.filter(owner = request.user)
+#     sum = expenses.aggregate(Sum('amount'))
+
+#     html_string = render_to_string('expenses/pdf-output', {'expenses':expenses, "total":sum['amount__sum']})
+#     html = HTML(string = html_string)
+
+#     result = html.write_pdf()
+#     with tempfile.NamedTemporaryFile(delete=True) as output:
+#         output.write(result)
+#         output.flush()
+#         output = open(output.name, 'rb')
+#         response.write(output.read())
+
+#     return response
+
